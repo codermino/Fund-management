@@ -1,5 +1,7 @@
 <template>
-  $END$
+  <class class="index">
+    初始化页面
+  </class>
 </template>
 
 <script>
