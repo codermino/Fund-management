@@ -97,9 +97,14 @@
                   message:'账号注册成功',
                   type:'success'
                 });
+                this.$router.push('/login');
+              })
+              .catch(err=>{
+                console.log(err);
+                this.$router.push('/register');
               });
 
-            this.$router.push('/login');
+
           } else {
             console.log('error submit!!');
             return false;
