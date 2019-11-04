@@ -93,6 +93,22 @@
           </template>
         </el-table-column>
       </el-table>
+      <!-- 分页 -->
+      <el-row>
+        <el-col :span="24">
+          <div class="pagination">
+            <el-pagination
+              :page-sizes="paginations.page_sizes"
+              :page-size="paginations.page_size"
+              :layout="paginations.layout"
+              :total="paginations.total"
+              :current-page.sync='paginations.page_index'
+              @current-change='handleCurrentChange'
+              @size-change='handleSizeChange'>
+            </el-pagination>
+          </div>
+        </el-col>
+      </el-row>
     </div>
     <dialog-fund :dialog="dialog" :form-data="formData" @update="getProfile"></dialog-fund>
   </div>
@@ -108,7 +124,16 @@
     },
     data() {
       return {
+        //需要给分页组件传的信息
+        paginations: {
+          page_index: 1, // 当前位于哪页
+          total: 0, // 总数
+          page_size: 5, // 1页显示多少条
+          page_sizes: [5, 10, 15, 20], //每页显示多少条
+          layout: "total, sizes, prev, pager, next, jumper" // 翻页属性
+        },
         tableData: [],
+        allTableData: [],
         dialog:{
           show:false,
           title:'',
@@ -132,7 +157,9 @@
       getProfile() {
         // 获取表格数据
         this.$axios("/api/profiles").then(res => {
-          this.tableData = res.data;
+          this.allTableData = res.data;
+          // 设置分页数据
+          this.setPaginations();
         });
       },
       handleEdit(index,row) {
@@ -180,6 +207,53 @@
           remark: "",
           id: ""
         };
+      },
+      handleCurrentChange(page) {
+        // 当前页
+        // let sortnum = this.paginations.page_size * (page - 1);
+        // let table = this.allTableData.filter((item, index) => {
+        //   return index >= sortnum;
+        // });
+        // // 设置默认分页数据
+        // this.tableData = table.filter((item, index) => {
+        //   return index < this.paginations.page_size;
+        // });
+        // console.log(page);
+        // 获取当前页(也就是获取当前页开头的数据是第几条数据)
+        let index=this.paginations.page_size*(page-1);
+        // 获取当前页的数据的总数
+        let nums=this.paginations.page_size*page;
+        // 容器
+        let tables=[];
+
+        for(let i=index;i<nums;i++){
+          if(this.allTableData[i]){
+            tables.push(this.allTableData[i]);
+          }
+          this.tableData=tables;
+        }
+      },
+      handleSizeChange(page_size) {
+        // 切换size
+        this.paginations.page_index = 1;
+        this.paginations.page_size = page_size;
+        this.tableData = this.allTableData.filter((item, index) => {
+          return index < page_size;
+        });
+
+        // console.log(this.tableData);
+      },
+      setPaginations() {
+        // 总页数
+        this.paginations.total = this.allTableData.length;
+        this.paginations.page_index = 1;
+        this.paginations.page_size = 5;
+        // 设置默认分页数据
+        this.tableData = this.allTableData.filter((item, index) => {
+          return index < this.paginations.page_size;
+        });
+
+        // console.log(this.tableData);
       }
     },
     // filters是一个过滤器

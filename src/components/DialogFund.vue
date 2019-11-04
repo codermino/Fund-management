@@ -90,6 +90,8 @@ export default {
         if (valid) {
           // console.log(this.formData);
           //表单数据验证完成之后，提交数据;
+
+          // 传递给后端接口的formData就是req.body
           const url =
             this.dialog.option == "add" ? "add" : `edit/${this.formData.id}`;
           this.$axios.post(`/api/profiles/${url}`, this.formData).then(res => {
