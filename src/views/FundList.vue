@@ -3,9 +3,28 @@
     <div>
       <el-form
         :inline="true"
-        ref="add_data">
+        ref="add_data"
+        :model="search_data">
+        <!-- 筛选-->
+        <el-form-item label="投标时间筛选:">
+          <el-date-picker
+            v-model="search_data.startTime"
+            type="datetime"
+            placeholder="选择开始时间">
+          </el-date-picker> --
+          <el-date-picker
+            v-model="search_data.endTime"
+            type="datetime"
+            placeholder="选择结束时间">
+          </el-date-picker>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" size ="small" icon="search" @click='handleSearch()'>筛选</el-button>
+        </el-form-item>
+
         <el-form-item class="btnRight">
-          <el-button type="primary" size ="small" icon="view" @click='handleAdd()'>添加</el-button>
+          <el-button type="primary" size ="small" icon="view" @click='handleAdd()' v-if="user.identity==='manager'">添加</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -78,7 +97,7 @@
           align='center'
           width="220">
         </el-table-column>
-        <el-table-column label="操作" prop="operation" fixed="right" align="center" width="200">
+        <el-table-column label="操作" prop="operation" fixed="right" align="center" width="200" v-if="user.identity==='manager'">
           <template slot-scope="scope">
             <el-button
               type="warning"
@@ -134,6 +153,7 @@
         },
         tableData: [],
         allTableData: [],
+        filterTableData:[],
         dialog:{
           show:false,
           title:'',
@@ -147,8 +167,17 @@
           cash:'',
           remark:'',
           id:''
+        },
+        search_data: {
+          startTime: "",
+          endTime: ""
         }
       };
+    },
+    computed:{
+      user(){
+        return this.$store.getters.user;
+      }
     },
     created() {
       this.getProfile();
@@ -158,6 +187,7 @@
         // 获取表格数据
         this.$axios("/api/profiles").then(res => {
           this.allTableData = res.data;
+          this.filterTableData=res.data;
           // 设置分页数据
           this.setPaginations();
         });
@@ -254,6 +284,35 @@
         });
 
         // console.log(this.tableData);
+      },
+      handleSearch(){
+        // 筛选
+        // 这里可以改进当右边的选择框为空的时候
+        if (!this.search_data.startTime || !this.search_data.endTime) {
+          this.$message({
+            type: "warning",
+            message: "请选择时间区间"
+          });
+          this.getProfile();
+          return;
+        }
+
+        // 获得选择的时间的时间戳
+        const stime = this.search_data.startTime.getTime()/1000;
+        const etime = this.search_data.endTime.getTime()/1000;
+
+        // console.log(stime + " " + etime);
+        // console.log(this.filterTableData);
+
+        this.allTableData=this.filterTableData.filter(item=>{
+          // let date = new Date(item.date);
+          // let time = date.getTime();
+          let time=item.time/1000;
+          return time >= stime && time <= etime;
+        });
+
+        // 分页数据
+        this.setPaginations();
       }
     },
     // filters是一个过滤器
